@@ -1,0 +1,58 @@
+# Quartus Prime generated files and directories
+# Project files
+*.qpf
+*.qws
+*.qsf
+*.qdf
+
+# Output files
+output_files/
+db/
+incremental_db/
+simulation/
+temp/
+.qsys_edit/
+.qsys_project/
+
+# Report files
+*.rpt
+*.txt
+*.html
+*.log
+*.pin
+*.srf
+*.sof
+*.pof
+*.jdi
+*.svf
+*.vwf
+*.vcd
+*.psf
+*.dat
+*.csv
+
+# Other generated files
+*.bak
+*.rbf
+*.srp
+*.sta
+*.tdf
+*.vho
+*.vqm
+*.xml
+*.cdr
+*.do
+*.gpp
+*.prg
+*.qpb
+*.qpt
+*.qsm
+*.qtm
+*.sdc
+*.tcl
+*.wdf
+*.wsf
+
+# System files (OS-specific)
+.DS_Store
+Thumbs.db
