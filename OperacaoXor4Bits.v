@@ -3,5 +3,5 @@ module OperacaoXor4Bits(
     input [3:0] B,
     output [3:0] Y
 );
-    assign Y = A ^ B;  // operação OR bit a bit
+    assign Y = A ^ B;  // operação XOR bit a bit
 endmodule
