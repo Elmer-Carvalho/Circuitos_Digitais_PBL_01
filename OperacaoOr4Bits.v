@@ -1,0 +1,7 @@
+module OperacaoOr4Bits(
+    input [3:0] A,
+    input [3:0] B,
+    output [3:0] Y
+);
+    assign Y = A | B;  // operação OR bit a bit
+endmodule
