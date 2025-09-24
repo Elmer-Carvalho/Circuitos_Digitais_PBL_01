@@ -20,7 +20,8 @@ module ULA_4Bits(
 );
 
     // --- Sinais Internos ---
-    wire [3:0] soma_s, sub_s, and_y, or_y, xor_y, div_q;
+    // Adicionado 'div_r' para conectar ao resto do divisor
+    wire [3:0] soma_s, sub_s, and_y, or_y, xor_y, div_q, div_r;
     wire [7:0] mult_p;
     wire soma_cout, sub_bout, div_err;
     
@@ -31,14 +32,15 @@ module ULA_4Bits(
     wire [7:0] valor_abs;
     wire [3:0] bcd_c, bcd_d, bcd_u;
 
-    // --- Instanciação dos Módulos de Operação (sem mudanças) ---
+    // --- Instanciação dos Módulos de Operação ---
     Somador4Bits      U0_Soma (soma_s, soma_cout, A_in, B_in, Cin);
     Subtrator4Bits    U1_Sub  (sub_s, sub_bout, A_in, B_in, Cin);
     OperacaoAnd4Bits  U2_And  (and_y, A_in, B_in);
     OperacaoOr4Bits   U3_Or   (or_y, A_in, B_in);
     OperacaoXor4Bits  U4_Xor  (xor_y, A_in, B_in);
     Multiplicador4Bits U5_Mult (mult_p, A_in, B_in);
-    Divisor4Bits      U6_Div  (div_q, , div_err, A_in, B_in); // Resto não é mais usado diretamente
+    // CORREÇÃO: Conectado o fio 'div_r' à saída de resto do divisor
+    Divisor4Bits      U6_Div  (div_q, div_r, div_err, A_in, B_in);
 
     // --- Lógica de Seleção e Saídas ---
     assign Result_out = result_reg;
