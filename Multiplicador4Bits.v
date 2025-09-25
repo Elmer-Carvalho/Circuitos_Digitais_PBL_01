@@ -18,8 +18,7 @@ module Multiplicador4Bits(
     wire c1, c2, c3;
 
     // Estágio 1: Soma os dois primeiros produtos parciais (pp0 e pp1)
-    // pp1 já está deslocado uma posição para a esquerda.
-    Somador4Bits ADD1 (soma1_s, c1, pp0, {1'b0, pp1[3:1]}, 1'b0);
+    Somador4Bits ADD1 (soma1_s, c1, {1'b0, pp0[3:1]}, pp1, 1'b0);
 
     // Estágio 2: Soma o resultado anterior com o terceiro produto parcial (pp2)
     Somador4Bits ADD2 (soma2_s, c2, {c1, soma1_s[3:1]}, pp2, soma1_s[0]);
