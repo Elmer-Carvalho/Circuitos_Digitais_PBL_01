@@ -10,7 +10,7 @@ module Divisor4Bits(
 
     // --- Sinais Intermediários ---
     // O resto parcial (R_partial) precisa de 5 bits para a comparação
-    wire [4:0] R_partial1_shifted, R_partial1_sub, R_partial1;
+    wire [4:0] R_partial0, R_partial1_shifted, R_partial1_sub, R_partial1;
     wire [4:0] R_partial2_shifted, R_partial2_sub, R_partial2;
     wire [4:0] R_partial3_shifted, R_partial3_sub, R_partial3;
     wire [4:0] R_partial4_shifted, R_partial4_sub, R_final;
@@ -23,9 +23,10 @@ module Divisor4Bits(
     assign ERR = (B == 4'b0);
 
     // --- Estágios da Divisão ---
+    assign R_partial0 = 5'b0; // Resto inicial é zero
 
     // Estágio 1 (para o bit Q[3])
-    assign R_partial1_shifted = {1'b0, A[3:1]};
+    assign R_partial1_shifted = {R_partial0[3:0], A[3]};
     Subtrator4Bits SUB1 (sub1_s, bout1, R_partial1_shifted[3:0], B, R_partial1_shifted[4]);
     assign R_partial1_sub = {bout1, sub1_s};
     assign Q[3] = ~bout1;
