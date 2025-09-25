@@ -1,20 +1,19 @@
-// Módulo para divisão de 4x4 bits em estilo ESTRUTURAL
+// Módulo para divisão de 4x4 bits em estilo ESTRUTURAL (VERSÃO CORRIGIDA)
 // Utiliza o algoritmo de Divisão com Restauração (combinacional)
 module Divisor4Bits(
     input [3:0] A,  // Dividendo
     input [3:0] B,  // Divisor
-    output [3:0] Q, // Quociente
+    output [3:0] Q, // Quocien_tentativate
     output [3:0] R, // Resto
     output ERR      // Flag de erro (1 para divisão por zero)
 );
 
     // --- Sinais Intermediários ---
-    // O resto parcial precisa de um bit extra para a comparação
-    wire [4:0] R0, R1_tentativa, R1, R2_tentativa, R2, R3_tentativa, R3, R4_tentativa;
-    
-    // Fios para os resultados das subtrações
-    wire [3:0] sub1_s, sub2_s, sub3_s, sub4_s;
-    wire bout1, bout2, bout3, bout4;
+    // O resto parcial (R_partial) precisa de 5 bits para a comparação
+    wire [4:0] R_partial1_shifted, R_partial1_sub, R_partial1;
+    wire [4:0] R_partial2_shifted, R_partial2_sub, R_partial2;
+    wire [4:0] R_partial3_shifted, R_partial3_sub, R_partial3;
+    wire [4:0] R_partial4_shifted, R_partial4_sub, R_final;
 
     // --- Lógica de Erro ---
     assign ERR = (B == 4'b0);
@@ -22,30 +21,30 @@ module Divisor4Bits(
     // --- Estágios da Divisão ---
 
     // Estágio 1 (para o bit Q[3])
-    assign R0 = {1'b0, A}; // Resto inicial é o próprio dividendo
-    Subtrator4Bits SUB1 (sub1_s, bout1, R0[3:0], B, R0[4]);
-    assign R1_tentativa = {bout1, sub1_s};
-    // Se bout1=1 (negativo), restaura R0. Senão, usa o resultado da subtração.
-    assign Q[3] = ~bout1;
-    assign R1 = bout1 ? R0 : R1_tentativa;
+    assign R_partial1_shifted = {1'b0, A[3:1]}; // Inicia com 0 e os 3 bits mais significativos de A
+    assign R_partial1_sub = R_partial1_shifted - {1'b0, B};
+    assign Q[3] = ~R_partial1_sub[4]; // Se o resultado for negativo (bit 5 = 1), Q[3] = 0
+    assign R_partial1 = R_partial1_sub[4] ? R_partial1_shifted : R_partial1_sub;
 
     // Estágio 2 (para o bit Q[2])
-    Subtrator4Bits SUB2 (sub2_s, bout2, R1[3:0], B, R1[4]);
-    assign R2_tentativa = {bout2, sub2_s};
-    assign Q[2] = ~bout2;
-    assign R2 = bout2 ? R1 : R2_tentativa;
+    assign R_partial2_shifted = {R_partial1[3:0], A[2]}; // Shift e traz o próximo bit de A
+    assign R_partial2_sub = R_partial2_shifted - {1'b0, B};
+    assign Q[2] = ~R_partial2_sub[4];
+    assign R_partial2 = R_partial2_sub[4] ? R_partial2_shifted : R_partial2_sub;
 
     // Estágio 3 (para o bit Q[1])
-    Subtrator4Bits SUB3 (sub3_s, bout3, R2[3:0], B, R2[4]);
-    assign R3_tentativa = {bout3, sub3_s};
-    assign Q[1] = ~bout3;
-    assign R3 = bout3 ? R2 : R3_tentativa;
+    assign R_partial3_shifted = {R_partial2[3:0], A[1]}; // Shift e traz o próximo bit de A
+    assign R_partial3_sub = R_partial3_shifted - {1'b0, B};
+    assign Q[1] = ~R_partial3_sub[4];
+    assign R_partial3 = R_partial3_sub[4] ? R_partial3_shifted : R_partial3_sub;
     
     // Estágio 4 (para o bit Q[0])
-    Subtrator4Bits SUB4 (sub4_s, bout4, R3[3:0], B, R3[4]);
-    assign Q[0] = ~bout4;
+    assign R_partial4_shifted = {R_partial3[3:0], A[0]}; // Shift e traz o último bit de A
+    assign R_partial4_sub = R_partial4_shifted - {1'b0, B};
+    assign Q[0] = ~R_partial4_sub[4];
+    assign R_final = R_partial4_sub[4] ? R_partial4_shifted : R_partial4_sub;
     
-    // O resto final é o resultado do último estágio válido
-    assign R = bout4 ? R3[3:0] : sub4_s;
+    // O resto final são os 4 bits menos significativos do último resto parcial
+    assign R = R_final[3:0];
 
 endmodule
