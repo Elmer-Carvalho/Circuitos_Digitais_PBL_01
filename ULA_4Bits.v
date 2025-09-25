@@ -32,14 +32,56 @@ module ULA_4Bits(
     wire [7:0] valor_abs;
     wire [3:0] bcd_c, bcd_d, bcd_u;
 
-    // --- Instanciação dos Módulos de Operação ---
-    Somador4Bits      U0_Soma (soma_s, soma_cout, A_in, B_in, Cin);
-    Subtrator4Bits    U1_Sub  (sub_s, sub_bout, A_in, B_in, Cin);
-    OperacaoAnd4Bits  U2_And  (and_y, A_in, B_in);
-    OperacaoOr4Bits   U3_Or   (or_y, A_in, B_in);
-    OperacaoXor4Bits  U4_Xor  (xor_y, A_in, B_in);
-    Multiplicador4Bits U5_Mult (mult_p, A_in, B_in);
-    Divisor4Bits      U6_Div  (div_q, div_r, div_err, A_in, B_in);
+    // --- Instanciação dos Módulos de Operação (CORRIGIDO) ---
+    // A conexão por nome (.porta(sinal)) é usada para clareza e segurança.
+    
+    Somador4Bits      U0_Soma (
+        .S(soma_s), 
+        .Cout(soma_cout), 
+        .A(A_in), 
+        .B(B_in), 
+        .Cin(Cin)
+    );
+    
+    Subtrator4Bits    U1_Sub  (
+        .S(sub_s), 
+        .Bout(sub_bout), 
+        .A(A_in), 
+        .B(B_in), 
+        .Bin(Cin)
+    );
+    
+    OperacaoAnd4Bits  U2_And  (
+        .A(A_in), 
+        .B(B_in), 
+        .Y(and_y)
+    );
+    
+    OperacaoOr4Bits   U3_Or   (
+        .A(A_in), 
+        .B(B_in), 
+        .Y(or_y)
+    );
+    
+    OperacaoXor4Bits  U4_Xor  (
+        .A(A_in), 
+        .B(B_in), 
+        .Y(xor_y)
+    );
+    
+    Multiplicador4Bits U5_Mult (
+        .A(A_in), 
+        .B(B_in), 
+        .P(mult_p)
+    );
+    
+    Divisor4Bits      U6_Div  (
+        .A(A_in), 
+        .B(B_in), 
+        .Q(div_q), 
+        .R(div_r), 
+        .ERR(div_err)
+    );
 
     // --- Lógica de Seleção e Saídas para as Flags ---
     assign LED_Cout = cout_reg;
@@ -63,22 +105,28 @@ module ULA_4Bits(
                 if (sub_s[3]) is_negative = 1'b1;
             end
             3'b010: begin // AND
-                result_reg = {4'b0, and_y}; cout_reg = 0; ov_reg = 0;
+                result_reg = {4'b0, and_y};
+                cout_reg = 0; ov_reg = 0;
             end
             3'b011: begin // OR
-                result_reg = {4'b0, or_y}; cout_reg = 0; ov_reg = 0;
+                result_reg = {4'b0, or_y};
+                cout_reg = 0; ov_reg = 0;
             end
             3'b100: begin // XOR
-                result_reg = {4'b0, xor_y}; cout_reg = 0; ov_reg = 0;
+                result_reg = {4'b0, xor_y};
+                cout_reg = 0; ov_reg = 0;
             end
             3'b101: begin // MULTIPLICAÇÃO (A*B)
-                result_reg = mult_p; cout_reg = 0; ov_reg = 0;
+                result_reg = mult_p;
+                cout_reg = 0; ov_reg = 0;
             end
             3'b110: begin // DIVISÃO (A/B)
-                result_reg = {4'b0, div_q}; cout_reg = 0; ov_reg = 0;
+                result_reg = {4'b0, div_q};
+                cout_reg = 0; ov_reg = 0;
             end
             default: begin
-                result_reg = 8'h00; cout_reg = 0; ov_reg = 0;
+                result_reg = 8'h00;
+                cout_reg = 0; ov_reg = 0;
             end
         endcase
     end
@@ -87,14 +135,30 @@ module ULA_4Bits(
     assign valor_abs = is_negative ? (~result_reg + 1) : result_reg;
 
     // Instancia o conversor Binário para BCD
-    BinarioParaBCD U7_Conversor (valor_abs, bcd_c, bcd_d, bcd_u);
-
+    BinarioParaBCD U7_Conversor (
+        .bin_in(valor_abs), 
+        .bcd_centenas(bcd_c), 
+        .bcd_dezenas(bcd_d), 
+        .bcd_unidades(bcd_u)
+    );
+    
     // Instancia os decodificadores para os 3 displays de resultado
-    Decodificador7Seg U8_HEX0 (bcd_u, HEX0); // Unidades
-    Decodificador7Seg U9_HEX1 (bcd_d, HEX1); // Dezenas
-    Decodificador7Seg U10_HEX2 (bcd_c, HEX2); // Centenas
+    Decodificador7Seg U8_HEX0 (
+        .data_in(bcd_u), 
+        .segments(HEX0)
+    ); // Unidades
+    
+    Decodificador7Seg U9_HEX1 (
+        .data_in(bcd_d), 
+        .segments(HEX1)
+    ); // Dezenas
+    
+    Decodificador7Seg U10_HEX2 (
+        .data_in(bcd_c), 
+        .segments(HEX2)
+    ); // Centenas
     
     // Lógica para o display de sinal
-    assign HEX3 = is_negative ? 7'b0000001 : 7'b0000000;
+    assign HEX3 = is_negative ? 7'b0000001 : 7'b0000000; // Mostra '-' para negativo
 
 endmodule
