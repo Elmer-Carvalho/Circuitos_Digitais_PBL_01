@@ -1,39 +1,55 @@
 // Módulo para decodificar um valor de 4 bits para um display de 7 segmentos
 module Decodificador7Seg(
-    input [3:0] data_in,      // Entrada de 4 bits (0-F)
-    output [6:0] segments    // Saída para os 7 segmentos (a-g)
+    input [3:0] I,           // Entrada de 4 bits
+    output [6:0] segments    // Saída para os 7 segmentos (a,b,c,d,e,f,g)
 );
-    // segments[6] -> a
-    // segments[5] -> b
-    // segments[4] -> c
-    // segments[3] -> d
-    // segments[2] -> e
-    // segments[1] -> f
-    // segments[0] -> g
+    wire notD, notC, notB, notA;
+    
+    // Inversores para cada bit de entrada
+    not nD(notD, I[3]); 
+    not nC(notC, I[2]); 
+    not nB(notB, I[1]); 
+    not nA(notA, I[0]);
 
-    reg [6:0] segments_reg;
-    assign segments = segments_reg;
+    // Expressões Booleanas Minimizadas para cada segmento (ativo em '1')
+    
+    // Segmento 'a' = D + B + (C&A) + (notC&notA)
+    wire a_t1, a_t2;
+    and and_a1(a_t1, I[2], I[0]);
+    and and_a2(a_t2, notC, notA);
+    or or_a(segments[6], I[3], I[1], a_t1, a_t2);
+    
+    // Segmento 'b' = notC + (notB&notA) + (B&A)
+    wire b_t1, b_t2;
+    and and_b1(b_t1, notB, notA);
+    and and_b2(b_t2, I[1], I[0]);
+    or or_b(segments[5], notC, b_t1, b_t2);
 
-    always @(data_in)
-    begin
-        case(data_in)
-            4'h0: segments_reg = 7'b1111110; // 0
-            4'h1: segments_reg = 7'b0110000; // 1
-            4'h2: segments_reg = 7'b1101101; // 2
-            4'h3: segments_reg = 7'b1111001; // 3
-            4'h4: segments_reg = 7'b0110011; // 4
-            4'h5: segments_reg = 7'b1011011; // 5
-            4'h6: segments_reg = 7'b1011111; // 6
-            4'h7: segments_reg = 7'b1110000; // 7
-            4'h8: segments_reg = 7'b1111111; // 8
-            4'h9: segments_reg = 7'b1111011; // 9
-            4'hA: segments_reg = 7'b1110111; // A
-            4'hB: segments_reg = 7'b0011111; // b
-            4'hC: segments_reg = 7'b1001110; // C
-            4'hD: segments_reg = 7'b0111101; // d
-            4'hE: segments_reg = 7'b1001111; // E
-            4'hF: segments_reg = 7'b1000111; // F
-            default: segments_reg = 7'b0000000; // Apagado
-        endcase
-    end
+    // Segmento 'c' = C + notB + A
+    or or_c(segments[4], I[2], notB, I[0]);
+    
+    // Segmento 'd' = (notC&notA) + (C&notB&A) + (B&notA&C) + (B&notC&A) + D
+    wire d_t1, d_t2, d_t3, d_t4;
+    and and_d1(d_t1, notC, notA);
+    and and_d2(d_t2, I[2], notB, I[0]);
+    and and_d3(d_t3, I[1], notA, I[2]);
+    and and_d4(d_t4, I[1], notC, I[0]);
+    or or_d(segments[3], d_t1, d_t2, d_t3, d_t4, I[3]);
+    
+    // Segmento 'e' = (notC&notA) + (B&notA)
+    wire e_t1;
+    and and_e1(e_t1, I[1], notA);
+    or or_e(segments[2], e_t1, d_t1); // reutiliza (notC&notA)
+
+    // Segmento 'f' = D + (C&notB) + (B&notA)
+    wire f_t1;
+    and and_f1(f_t1, I[2], notB);
+    or or_f(segments[1], I[3], f_t1, e_t1); // reutiliza (B&notA)
+
+    // Segmento 'g' = D + (C&notB) + (B&notC) + (C&notA)
+    wire g_t1, g_t2;
+    and and_g1(g_t1, I[1], notC);
+    and and_g2(g_t2, I[2], notA);
+    or or_g(segments[0], I[3], f_t1, g_t1, g_t2); // reutiliza (C&notB)
+
 endmodule
