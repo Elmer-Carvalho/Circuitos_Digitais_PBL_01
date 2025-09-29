@@ -1,63 +1,80 @@
-// Módulo para decodificar um valor de 4 bits para um display de 7 segmentos
+// Módulo para decodificar um valor de 4 bits para display de 7 segmentos
+// Mapeamento: segments = {a, b, c, d, e, f, g}
+//             segments[6]=a, [5]=b, [4]=c, [3]=d, [2]=e, [1]=f, [0]=g
+
 module Decodificador7Seg(
-    input [3:0] I,           // Entrada de 4 bits
-    output [6:0] segments    // Saída para os 7 segmentos (a,b,c,d,e,f,g)
+    input [3:0] I,           // Entrada de 4 bits (0-15)
+    output [6:0] segments    // Saída: {a,b,c,d,e,f,g}
 );
-    wire notD, notC, notB, notA;
-    wire seg_a_out, seg_b_out, seg_c_out, seg_d_out, seg_e_out, seg_f_out, seg_g_out;
+    wire [3:0] n;  // Versões invertidas de I
+    
+    // Inversores para cada bit
+    not inv0(n[0], I[0]);
+    not inv1(n[1], I[1]);
+    not inv2(n[2], I[2]);
+    not inv3(n[3], I[3]);
 
-    // Inversores para cada bit de entrada
-    not nD(notD, I[3]);
-    not nC(notC, I[2]);
-    not nB(notB, I[1]);
-    not nA(notA, I[0]);
+    // Expressões booleanas minimizadas (quando segmento deve estar LIGADO = 1)
+    // Para anodo comum, invertemos no final
+    
+    // Segmento 'a' - Liga para: 0,2,3,5,6,7,8,9
+    // a = n[3]&n[2]&n[1]&n[0] | n[3]&n[2]&I[1]&n[0] | n[3]&n[2]&I[1]&I[0] |
+    //     n[3]&I[2]&n[1]&I[0] | n[3]&I[2]&I[1]&n[0] | n[3]&I[2]&I[1]&I[0] |
+    //     I[3]&n[2]&n[1]&n[0] | I[3]&n[2]&n[1]&I[0]
+    // Simplificando: a = I[2] | I[1] | (I[3]&n[0]) | (n[3]&n[1]&n[0])
+    wire a_t1, a_t2, a_t3, a_logic;
+    and a_and1(a_t1, I[3], n[0]);
+    and a_and2(a_t2, n[3], n[1], n[0]);
+    or a_or(a_logic, I[2], I[1], a_t1, a_t2);
+    not a_inv(segments[6], a_logic);  // Inverte para anodo comum
 
-    // Expressões Booleanas Minimizadas para cada segmento
+    // Segmento 'b' - Liga para: 0,1,2,3,4,7,8,9
+    // Simplificando: b = n[2] | (n[1]&n[0]) | (I[1]&I[0])
+    wire b_t1, b_t2, b_logic;
+    and b_and1(b_t1, n[1], n[0]);
+    and b_and2(b_t2, I[1], I[0]);
+    or b_or(b_logic, n[2], b_t1, b_t2);
+    not b_inv(segments[5], b_logic);
 
-    // Segmento 'a' = D + B + (C&A) + (notC&notA)
-    wire a_t1, a_t2;
-    and and_a1(a_t1, I[2], I[0]);
-    and and_a2(a_t2, notC, notA);
-    or or_a(seg_a_out, I[3], I[1], a_t1, a_t2);
-    not not_a(segments[6], seg_a_out); // CORREÇÃO: Inverte a saída
+    // Segmento 'c' - Liga para: 0,1,3,4,5,6,7,8,9
+    // Simplificando: c = n[1] | I[0] | I[2]
+    wire c_logic;
+    or c_or(c_logic, n[1], I[0], I[2]);
+    not c_inv(segments[4], c_logic);
 
-    // Segmento 'b' = notC + (notB&notA) + (B&A)
-    wire b_t1, b_t2;
-    and and_b1(b_t1, notB, notA);
-    and and_b2(b_t2, I[1], I[0]);
-    or or_b(seg_b_out, notC, b_t1, b_t2);
-    not not_b(segments[5], seg_b_out); // CORREÇÃO: Inverte a saída
+    // Segmento 'd' - Liga para: 0,2,3,5,6,8,9
+    // d = (n[2]&n[1]&n[0]) | (n[2]&I[1]&I[0]) | (I[2]&n[1]&I[0]) | 
+    //     (I[2]&I[1]&n[0]) | I[3]
+    wire d_t1, d_t2, d_t3, d_t4, d_logic;
+    and d_and1(d_t1, n[2], n[1], n[0]);
+    and d_and2(d_t2, n[2], I[1], I[0]);
+    and d_and3(d_t3, I[2], n[1], I[0]);
+    and d_and4(d_t4, I[2], I[1], n[0]);
+    or d_or(d_logic, d_t1, d_t2, d_t3, d_t4, I[3]);
+    not d_inv(segments[3], d_logic);
 
-    // Segmento 'c' = C + notB + A
-    or or_c(seg_c_out, I[2], notB, I[0]);
-    not not_c(segments[4], seg_c_out); // CORREÇÃO: Inverte a saída
+    // Segmento 'e' - Liga para: 0,2,6,8
+    // e = (n[2]&n[0]) | (I[1]&n[0])
+    wire e_t1, e_t2, e_logic;
+    and e_and1(e_t1, n[2], n[0]);
+    and e_and2(e_t2, I[1], n[0]);
+    or e_or(e_logic, e_t1, e_t2);
+    not e_inv(segments[2], e_logic);
 
-    // Segmento 'd' = (notC&notA) + (C&notB&A) + (B&notA&C) + (B&notC&A) + D
-    wire d_t1, d_t2, d_t3, d_t4;
-    and and_d1(d_t1, notC, notA);
-    and and_d2(d_t2, I[2], notB, I[0]);
-    and and_d3(d_t3, I[1], notA, I[2]);
-    and and_d4(d_t4, I[1], notC, I[0]);
-    or or_d(seg_d_out, d_t1, d_t2, d_t3, d_t4, I[3]);
-    not not_d(segments[3], seg_d_out); // CORREÇÃO: Inverte a saída
+    // Segmento 'f' - Liga para: 0,4,5,6,8,9
+    // f = (n[2]&n[1]) | (n[1]&n[0]) | (I[2]&n[0]) | I[3]
+    wire f_t1, f_t2, f_logic;
+    and f_and1(f_t1, n[2], n[1]);
+    and f_and2(f_t2, I[2], n[0]);
+    or f_or(f_logic, f_t1, b_t1, f_t2, I[3]);  // Reutiliza b_t1 = (n[1]&n[0])
+    not f_inv(segments[1], f_logic);
 
-    // Segmento 'e' = (notC&notA) + (B&notA)
-    wire e_t1;
-    and and_e1(e_t1, I[1], notA);
-    or or_e(seg_e_out, e_t1, d_t1); // reutiliza (notC&notA)
-    not not_e(segments[2], seg_e_out); // CORREÇÃO: Inverte a saída
-
-    // Segmento 'f' = D + (C&notB) + (B&notA)
-    wire f_t1;
-    and and_f1(f_t1, I[2], notB);
-    or or_f(seg_f_out, I[3], f_t1, e_t1); // reutiliza (B&notA)
-    not not_f(segments[1], seg_f_out); // CORREÇÃO: Inverte a saída
-
-    // Segmento 'g' = D + (C&notB) + (B&notC) + (C&notA)
-    wire g_t1, g_t2;
-    and and_g1(g_t1, I[1], notC);
-    and and_g2(g_t2, I[2], notA);
-    or or_g(seg_g_out, I[3], f_t1, g_t1, g_t2); // reutiliza (C&notB)
-    not not_g(segments[0], seg_g_out); // CORREÇÃO: Inverte a saída
+    // Segmento 'g' - Liga para: 2,3,4,5,6,8,9
+    // g = (n[3]&I[2]) | (I[1]&n[0]) | (n[2]&I[1]) | I[3]
+    wire g_t1, g_t2, g_logic;
+    and g_and1(g_t1, n[3], I[2]);
+    and g_and2(g_t2, n[2], I[1]);
+    or g_or(g_logic, g_t1, e_t2, g_t2, I[3]);  // Reutiliza e_t2 = (I[1]&n[0])
+    not g_inv(segments[0], g_logic);
 
 endmodule
