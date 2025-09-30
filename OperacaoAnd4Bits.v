@@ -1,3 +1,4 @@
+// Módulo para operação AND de 4 bits em estilo ESTRUTURAL
 module OperacaoAnd4Bits(
     input [3:0] A,
     input [3:0] B,
