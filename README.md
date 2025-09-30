@@ -3,7 +3,7 @@
 
 Projeto de uma Unidade Lógica e Aritmética (ULA) de 4 bits. Este trabalho foi desenvolvido para a disciplina de Circuitos Digitais, explorando na prática como os blocos lógicos que estudamos se unem para criar uma ULA.
 
-A top-level design entity deste projeto é o módulo `ULA_4Bits`, que, através de um seletor de operação, pode executar diversas funções aritméticas e lógicas. O resultado é processado, convertido para um formato decimal e exibido em até quatro displays de 7 segmentos.
+A top-level design entity deste projeto é o módulo `Nova_ULA_4Bits`, que, através de um seletor de operação, pode executar diversas funções aritméticas e lógicas. O resultado é processado, convertido para um formato decimal e exibido em até quatro displays de 7 segmentos.
 
 ## ✨ Funcionalidades do Circuito
 
@@ -45,7 +45,7 @@ O projeto foi implementado utilizando um estilo de modelagem **estrutural** em V
 
 ## 🔌 Interface do Módulo (Entradas e Saídas)
 
-A seguir, a descrição das portas de interface do top-level module `ULA_4Bits`:
+A seguir, a descrição das portas de interface do top-level module `Nova_ULA_4Bits`:
 
 ### Entradas
 
